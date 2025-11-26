@@ -17,6 +17,7 @@ const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const createUser = (email, password) => {
+
     setLoading(true);
     return createUserWithEmailAndPassword(auth, email, password);
   };
@@ -31,9 +32,17 @@ const AuthProvider = ({ children }) => {
       return signInWithPopup(auth ,googleAuthProvider )
    }
 
-  const logout = () => {
+  const logout = async() => {
+try {
     setLoading(true);
-    signOut(auth);
+    await signOut(auth); // <-- must await
+    return true; // <-- return something
+  } catch (error) {
+    console.log(error);
+    return false;
+  } finally {
+    setLoading(false);
+  }
   };
 
   useEffect(() => {

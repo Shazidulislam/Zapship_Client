@@ -4,6 +4,7 @@ import Home from "../Pages/Home/Home";
 import AuthLayout from "../Layout/AuthLayout";
 import Login from "../Pages/Authpage/Login";
 import Register from "../Pages/Authpage/Register";
+import Coverage from "../Pages/Coverage/Coverage";
 
 const router = createBrowserRouter(
 [
@@ -16,7 +17,8 @@ const router = createBrowserRouter(
             Component:Home,
         },
         {
-
+          path:"coverage",
+          Component:Coverage,
         }
     ]
    },
@@ -25,14 +27,13 @@ const router = createBrowserRouter(
     Component:AuthLayout,
     children:[
         {
-            path:"/login",
+            path:"login",
             element:<Login></Login>
         },
         {
             path:"/register",
             element:<Register></Register>
-        },
-        
+        }
     ]
    }
 ]

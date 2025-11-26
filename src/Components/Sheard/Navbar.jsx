@@ -1,7 +1,9 @@
-import { NavLink } from "react-router";
+import {  NavLink, useNavigate } from "react-router";
 import ProFastButton from "../Button/ProFastButton";
+import useAuth from "../../hooks/useAuth";
 
 const Navbar = () => {
+  const {logout} = useAuth()
   const navItems = (
     <>
       <li>
@@ -13,8 +15,27 @@ const Navbar = () => {
       <li>
         <NavLink to={"/"}>Product</NavLink>
       </li>
+      <li>
+        <NavLink to={"/coverage"}>Coverage</NavLink>
+      </li>
+      <li>
+        <NavLink to={'/login'}>LogIn</NavLink>
+      </li>
+      <li>
+        <NavLink to={'/register'}>Register</NavLink>
+      </li>
     </>
   );
+    const navigate = useNavigate()
+
+  const handleLogOut = async()=>{
+    const result = await logout()
+    if(result){
+      alert("User Logout successfully!")
+       navigate("/login")
+    }
+  
+  }
 
   return (
       <div className="navbar  shadow-sm ">
@@ -48,8 +69,8 @@ const Navbar = () => {
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">{navItems}</ul>
         </div>
-        <div className="navbar-end">
-          <a className="btn">Button</a>
+        <div onClick={handleLogOut} className="navbar-end cursor-pointer">
+          <p>Log Out</p>
         </div>
       </div>
   );

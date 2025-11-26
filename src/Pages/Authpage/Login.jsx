@@ -1,14 +1,21 @@
 import React from "react";
 import { useForm } from "react-hook-form"
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import SocialLogin from "../../Components/Auth/SocialLogin";
+import useAuth from "../../hooks/useAuth";
 
 
 const Login = () => {
 
     const {register ,handleSubmit  , formState:{errors}} = useForm()
-
-    const onSubmit =(data)=>{
+    const {signInUser} = useAuth()
+    const navigate = useNavigate()
+    const onSubmit =async(data)=>{
+        const result = await signInUser(data?.email , data?.password)
+        if(result.user){
+           alert("Login successfully!")
+           navigate("/")
+        }
         console.log(data)
     }
 
