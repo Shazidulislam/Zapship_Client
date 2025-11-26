@@ -1,6 +1,8 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import useAuth from "../../hooks/useAuth";
+import { Link } from "react-router";
+import SocialLogin from "../../Components/Auth/SocialLogin";
 
 const Register = () => {
   const {
@@ -16,10 +18,10 @@ const Register = () => {
 
     // create user
     const result = await createUser(data?.email, data?.password);
-    if(result?.user){
-        console.log(result.user)
+    if (result?.user) {
+      console.log(result.user);
     }
-    
+
     console.log(result);
   };
   return (
@@ -28,6 +30,16 @@ const Register = () => {
         <h1 className="text-3xl font-medium">Register Now</h1>
         <form onSubmit={handleSubmit(onSubmit)}>
           <fieldset className="fieldset">
+            <label className="label">Name</label>
+            <input
+              type="text"
+              {...register("text", { required: true })}
+              className="input"
+              placeholder="Name"
+            />
+            {
+                errors.text?.type === "required" && <p className="text-red-500">Name is required!</p>
+            }
             <label className="label">Email</label>
             <input
               type="email"
@@ -62,9 +74,15 @@ const Register = () => {
             {errors.password && (
               <p className="text-red-600">{errors.password?.message}</p>
             )}
-            <button className="btn btn-neutral mt-4">Register</button>
+            <button className="py-2 bg-[#CAEB66] btn mt-4 rounded-md">
+              Register
+            </button>
           </fieldset>
+          <p>
+            <small className="font-medium">Already have an account? <Link to={"/login"} className="hover:text-[#CAEB66]">Login</Link></small>
+          </p>
         </form>
+        <SocialLogin method={"Register"} />
       </div>
     </div>
   );

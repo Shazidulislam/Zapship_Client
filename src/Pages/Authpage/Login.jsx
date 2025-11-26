@@ -1,5 +1,7 @@
 import React from "react";
 import { useForm } from "react-hook-form"
+import { Link } from "react-router";
+import SocialLogin from "../../Components/Auth/SocialLogin";
 
 
 const Login = () => {
@@ -27,11 +29,13 @@ const Login = () => {
             errors.password?.type === "required" && <p className="text-red-600">Password is required!</p>
            }
            {
-            errors.password?.type === "minLength" && <p className="text-red-600">Password id must be  charaters longer!</p>
+            errors.password?.type === "minLength" && <p className="text-red-600">Password  must be 8 charaters longer!</p>
            }
-            <button className="btn btn-neutral mt-4">Login</button>
+            <button className="btn bg-[#CAEB66] mt-4">Login</button>
           </fieldset>
+          <p className="font-medium"><small>Don't have an account? <Link to={"/register"} className="hover:text-[#CAEB66]">Register</Link> </small></p>
         </form>
+        <SocialLogin method={"Login"}/>
       </div>
     </div>
   );
