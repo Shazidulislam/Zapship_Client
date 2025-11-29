@@ -5,6 +5,8 @@ import AuthLayout from "../Layout/AuthLayout";
 import Login from "../Pages/Authpage/Login";
 import Register from "../Pages/Authpage/Register";
 import Coverage from "../Pages/Coverage/Coverage";
+import PriviteRoutes from "../routes/PriviteRoutes";
+import SendaPercel from "../Pages/SendaPercel/SendaPercel";
 
 const router = createBrowserRouter(
 [
@@ -20,6 +22,10 @@ const router = createBrowserRouter(
           path:"coverage",
           Component:Coverage,
           loader:()=> fetch("./servicesCenter.json")
+        },
+        {
+            path:"SendaPercel",
+            element:<PriviteRoutes><SendaPercel></SendaPercel></PriviteRoutes>
         }
     ]
    },
