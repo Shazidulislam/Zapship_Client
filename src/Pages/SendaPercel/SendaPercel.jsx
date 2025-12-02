@@ -110,7 +110,9 @@ const SendaPercel = () => {
                 )}
               </fieldset>
               <fieldset className="fieldset w-full">
-                <label className="label font-bold">Sender Pickup Wire house</label>
+                <label className="label font-bold">
+                  Sender Pickup Wire house
+                </label>
                 <input
                   type="text"
                   className="input w-full outline-none border-gray-200"
@@ -193,7 +195,9 @@ const SendaPercel = () => {
                 )}
               </fieldset>
               <fieldset className="fieldset w-full">
-                <label className="label font-bold">Receiver Delivery Wire house</label>
+                <label className="label font-bold">
+                  Receiver Delivery Wire house
+                </label>
                 <input
                   type="text"
                   className="input w-full outline-none border-gray-200"

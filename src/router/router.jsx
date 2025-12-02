@@ -7,6 +7,7 @@ import Register from "../Pages/Authpage/Register";
 import Coverage from "../Pages/Coverage/Coverage";
 import PriviteRoutes from "../routes/PriviteRoutes";
 import SendaPercel from "../Pages/SendaPercel/SendaPercel";
+import BeRider from "../Pages/BeRider/BeRider";
 
 const router = createBrowserRouter(
 [
@@ -26,6 +27,10 @@ const router = createBrowserRouter(
         {
             path:"SendaPercel",
             element:<PriviteRoutes><SendaPercel></SendaPercel></PriviteRoutes>
+        },
+        {
+            path:"beRider",
+            element:<PriviteRoutes><BeRider></BeRider></PriviteRoutes>
         }
     ]
    },
