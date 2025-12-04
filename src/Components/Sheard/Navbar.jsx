@@ -16,11 +16,13 @@ const Navbar = () => {
         <NavLink to={"/SendaPercel"}>Send A Percel</NavLink>
       </li>
       <li>
-        <NavLink to={"/coverage"}>Coverage</NavLink>
-      </li>
-
-      <li>
         <NavLink to={"/beRider"}>Be A Rider</NavLink>
+      </li>
+      <li>
+        <NavLink to={"/pricing"}>Pricing</NavLink>
+      </li>
+      <li>
+        <NavLink to={"/coverage"}>Coverage</NavLink>
       </li>
     </>
   );
@@ -67,12 +69,18 @@ const Navbar = () => {
         <ul className="menu menu-horizontal px-1">{navItems}</ul>
       </div>
       {user ? (
-        <div onClick={handleLogOut} className="navbar-end cursor-pointer  px-6 py-2 rounded font-medium">
+        <div
+          onClick={handleLogOut}
+          className="navbar-end cursor-pointer  px-6 py-2 rounded font-medium"
+        >
           <p>Log Out</p>
         </div>
       ) : (
-        <Link  className="navbar-end cursor-pointer px-6 py-2 rounded font-medium" to={"/login"}>
-            Log in
+        <Link
+          className="navbar-end cursor-pointer px-6 py-2 rounded font-medium"
+          to={"/login"}
+        >
+          Log in
         </Link>
       )}
     </div>

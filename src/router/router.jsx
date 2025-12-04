@@ -8,6 +8,7 @@ import Coverage from "../Pages/Coverage/Coverage";
 import PriviteRoutes from "../routes/PriviteRoutes";
 import SendaPercel from "../Pages/SendaPercel/SendaPercel";
 import BeRider from "../Pages/BeRider/BeRider";
+import PricingCalculation from "../Pages/PricingCalulation/PricingCalculation";
 
 const router = createBrowserRouter(
 [
@@ -26,11 +27,16 @@ const router = createBrowserRouter(
         },
         {
             path:"SendaPercel",
-            element:<PriviteRoutes><SendaPercel></SendaPercel></PriviteRoutes>
+            element:<PriviteRoutes><SendaPercel></SendaPercel></PriviteRoutes>,
+            loader:()=>fetch("./servicesCenter.json")
         },
         {
             path:"beRider",
             element:<PriviteRoutes><BeRider></BeRider></PriviteRoutes>
+        },
+        {
+            path:"pricing",
+            element:<PriviteRoutes><PricingCalculation></PricingCalculation></PriviteRoutes>
         }
     ]
    },

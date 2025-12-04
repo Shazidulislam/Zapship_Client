@@ -1,20 +1,48 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
+import { useLoaderData } from "react-router";
 
 const SendaPercel = () => {
-  const [type, setType] = useState("");
-  console.log(type)
+  const servicesCenter = useLoaderData();
+
   const {
     register,
     formState: { errors },
     handleSubmit,
-    reset,
+    // reset,
+    watch,
+    control,
   } = useForm();
+
+  const type = watch("type"); // 👀 live radio value
+
+  const regionsDuplicate = servicesCenter.map((c) => c.region);
+  const regions = [...new Set(regionsDuplicate)];
+
+  const senderRegion = useWatch({ control, name: "senderRegion" });
+  const receiverRegion = useWatch({ control, name: "receiverRegion" });
+
+
+  const districtsByRegion = (regions) => {
+    const regionDistricts = servicesCenter.filter((c) => c.region === regions);
+    const districta = regionDistricts.map((d) => d.district);
+    return districta;
+  };
 
   const onSubmit = (data) => {
     console.log(data);
-    reset();
-    setType(""); // reset radio selection
+
+
+    const isDocument = data.type === "document";
+    const isSameDistrict = data.senderDistrict === data.receiverDistrict;
+    const parcelWeight = parseFloat(data.weight)
+
+
+
+
+    if (data) {
+      alert("Parcel send");
+    }
+    // reset();
   };
 
   return (
@@ -34,22 +62,22 @@ const SendaPercel = () => {
             <input
               type="radio"
               value="document"
-              onChange={(e) => setType(e.target.value)}
               {...register("type", { required: true })}
               className="radio-green"
             />
             Document
           </label>
+
           <label className="flex items-center gap-1">
             <input
               type="radio"
               value="non-document"
-              onChange={(e) => setType(e.target.value)}
               {...register("type", { required: true })}
               className="radio-green"
             />
             Non-Document
           </label>
+
           {errors.type && (
             <span className="text-red-500 text-sm">Required</span>
           )}
@@ -73,15 +101,13 @@ const SendaPercel = () => {
           <fieldset className="fieldset w-full">
             <label className="label font-bold">Parcel Weight (KG)</label>
             <input
-              type="text"
+              type="number"
+              placeholder="Weight (kg)"
+              disabled={type !== "non-document"} // 🔥 only active for non-document
+              {...register("weight")}
               className="input w-full outline-none border-gray-200"
-              disabled={type === "document"} // disable when Document
-              placeholder="Parcel Weight (KG)"
-              {...register("percel-weight", {
-                required: type !== "document", // required only if not document
-              })}
             />
-            {errors["percel-weight"] && (
+            {errors["weight"] && (
               <span className="text-red-500 text-sm">Required</span>
             )}
           </fieldset>
@@ -111,56 +137,63 @@ const SendaPercel = () => {
               </fieldset>
               <fieldset className="fieldset w-full">
                 <label className="label font-bold">
-                  Sender Pickup Wire house
+                  Sender Email
                 </label>
                 <input
-                  type="text"
+                  type="email"
                   className="input w-full outline-none border-gray-200"
-                  placeholder="Select Wire house"
-                  {...register("sender-wireHouse", { required: true })}
+                  placeholder="Sender Email"
+                  {...register("senderEmail", { required: true })}
                 />
-                {errors["sender-wireHouse"] && (
+                {errors["senderEmail"] && (
                   <span className="text-red-500 text-sm">Required</span>
                 )}
               </fieldset>
             </div>
 
-            <div className="sm:grid grid-cols-2 w-full mt-4 gap-4">
-              <fieldset className="fieldset w-full">
-                <label className="label font-bold">Address</label>
-                <input
-                  type="text"
-                  className="input w-full outline-none border-gray-200"
-                  placeholder="Address"
-                  {...register("address", { required: true })}
-                />
-                {errors.address && (
-                  <span className="text-red-500 text-sm">Required</span>
-                )}
+            <div className="sm:grid grid-cols-2 w-full mt-2 gap-4">
+              <fieldset className="fieldset w-full ">
+                <legend className="fieldset-legend">Sender Regions</legend>
+                <select
+                  {...register("senderRegion")}
+                  defaultValue="Pick a region"
+                  className="select  w-full outline-none border-gray-200"
+                >
+                  <option disabled={true}>Pick a region</option>
+                  {regions.map((r, i) => (
+                    <option key={i} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
               </fieldset>
-              <fieldset className="fieldset w-full">
-                <label className="label font-bold">Sender Contact No</label>
-                <input
-                  type="text"
-                  className="input w-full outline-none border-gray-200"
-                  placeholder="Sender Contact Number"
-                  {...register("contact-number", { required: true })}
-                />
-                {errors["contact-number"] && (
-                  <span className="text-red-500 text-sm">Required</span>
-                )}
+              {/* sender districts */}
+              <fieldset className="fieldset">
+                <legend className="fieldset-legend">Sender Districts</legend>
+                <select
+                  {...register("senderDistrict")}
+                  defaultValue="Pick a district"
+                  className="select  w-full outline-none border-gray-200"
+                >
+                  <option disabled={true}>Pick a district</option>
+                  {districtsByRegion(senderRegion).map((r, i) => (
+                    <option key={i} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
               </fieldset>
             </div>
 
-            <fieldset className="fieldset w-full mt-4">
-              <label className="label font-bold">Your Region</label>
+            <fieldset className="fieldset  w-full">
+              <label className="label font-bold">Sender Contact No</label>
               <input
                 type="text"
                 className="input w-full outline-none border-gray-200"
-                placeholder="Your Region"
-                {...register("sender-region", { required: true })}
+                placeholder="Sender Contact Number"
+                {...register("contact-number", { required: true })}
               />
-              {errors["sender-region"] && (
+              {errors["contact-number"] && (
                 <span className="text-red-500 text-sm">Required</span>
               )}
             </fieldset>
@@ -196,56 +229,63 @@ const SendaPercel = () => {
               </fieldset>
               <fieldset className="fieldset w-full">
                 <label className="label font-bold">
-                  Receiver Delivery Wire house
+                  Receiver Email
                 </label>
                 <input
-                  type="text"
+                  type="email"
                   className="input w-full outline-none border-gray-200"
-                  placeholder="Select Wire house"
-                  {...register("receiver-wireHouse", { required: true })}
+                  placeholder="Receiver Email"
+                  {...register("receiverEmail", { required: true })}
                 />
-                {errors["receiver-wireHouse"] && (
+                {errors["receiverEmail"] && (
                   <span className="text-red-500 text-sm">Required</span>
                 )}
               </fieldset>
             </div>
 
-            <div className="sm:grid grid-cols-2 w-full mt-4 gap-4">
-              <fieldset className="fieldset w-full">
-                <label className="label font-bold">Receiver Address</label>
-                <input
-                  type="text"
-                  className="input w-full outline-none border-gray-200"
-                  placeholder="Address"
-                  {...register("receiver-address", { required: true })}
-                />
-                {errors["receiver-address"] && (
-                  <span className="text-red-500 text-sm">Required</span>
-                )}
+            <div className="sm:grid grid-cols-2 w-full mt-2 gap-4">
+              <fieldset className="fieldset  w-full">
+                <legend className="fieldset-legend">Receiver Regions</legend>
+                <select
+                  {...register("receiverRegion")}
+                  defaultValue="Pick a region"
+                  className="select  w-full outline-none border-gray-200"
+                >
+                  <option disabled={true}>Pick a region</option>
+                  {regions.map((r, i) => (
+                    <option key={i} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
               </fieldset>
-              <fieldset className="fieldset w-full">
-                <label className="label font-bold">Receiver Contact No</label>
-                <input
-                  type="text"
-                  className="input w-full outline-none border-gray-200"
-                  placeholder="Receiver Contact Number"
-                  {...register("receiver-number", { required: true })}
-                />
-                {errors["receiver-number"] && (
-                  <span className="text-red-500 text-sm">Required</span>
-                )}
+              {/* receiver district */}
+              <fieldset className="fieldset">
+                <legend className="fieldset-legend">Receiver District</legend>
+                <select
+                  {...register("receiverDistrict")}
+                  defaultValue="Pick a district"
+                  className="select w-full outline-none border-gray-200"
+                >
+                  <option disabled={true}>Pick a district</option>
+                  {districtsByRegion(receiverRegion).map((d, i) => (
+                    <option key={i} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
               </fieldset>
             </div>
 
-            <fieldset className="fieldset w-full mt-4">
-              <label className="label font-bold">Receiver Region</label>
+            <fieldset className="fieldset w-full">
+              <label className="label font-bold">Receiver Contact No</label>
               <input
                 type="text"
                 className="input w-full outline-none border-gray-200"
-                placeholder="Your Region"
-                {...register("receiver-region", { required: true })}
+                placeholder="Receiver Contact Number"
+                {...register("receiver-number", { required: true })}
               />
-              {errors["receiver-region"] && (
+              {errors["receiver-number"] && (
                 <span className="text-red-500 text-sm">Required</span>
               )}
             </fieldset>
