@@ -1,48 +1,70 @@
+import React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useLoaderData } from "react-router";
+import Swal from "sweetalert2";
 
 const SendaPercel = () => {
   const servicesCenter = useLoaderData();
 
   const {
     register,
-    formState: { errors },
     handleSubmit,
-    // reset,
-    watch,
     control,
+    watch,
+    formState: { errors },
   } = useForm();
 
-  const type = watch("type"); // 👀 live radio value
+  const type = watch("type");
+  const senderRegion = useWatch({ control, name: "senderRegion" });
+  const receiverRegion = useWatch({ control, name: "receiverRegion" });
 
   const regionsDuplicate = servicesCenter.map((c) => c.region);
   const regions = [...new Set(regionsDuplicate)];
 
-  const senderRegion = useWatch({ control, name: "senderRegion" });
-  const receiverRegion = useWatch({ control, name: "receiverRegion" });
-
-
-  const districtsByRegion = (regions) => {
-    const regionDistricts = servicesCenter.filter((c) => c.region === regions);
-    const districta = regionDistricts.map((d) => d.district);
-    return districta;
+  const districtsByRegion = (region) => {
+    if (!region) return [];
+    return servicesCenter
+      .filter((c) => c.region === region)
+      .map((c) => c.district);
   };
 
   const onSubmit = (data) => {
-    console.log(data);
-
-
     const isDocument = data.type === "document";
-    const isSameDistrict = data.senderDistrict === data.receiverDistrict;
-    const parcelWeight = parseFloat(data.weight)
+    const weight = parseFloat(data.weight) || 0;
+    const isWithinCity = data.senderDistrict === data.receiverDistrict;
 
+    let price = 0;
 
-
-
-    if (data) {
-      alert("Parcel send");
+    if (isDocument) {
+      price = isWithinCity ? 60 : 80;
+    } else {
+      // Non-Document pricing
+      if (weight <= 3) {
+        price = isWithinCity ? 110 : 150;
+      } else {
+        const extraWeight = weight - 3;
+        const extraCost = extraWeight * 40;
+        price = isWithinCity ? 110 + extraCost : 150 + extraCost + 40;
+      }
     }
-    // reset();
+
+    Swal.fire({
+      title: "Confirm Parcel Booking",
+      html: `<p>Total Price: ৳${price}</p>`,
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Send",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      position: "center",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        console.log({ ...data, price });
+        Swal.fire("Sent!", "Your parcel has been booked.", "success");
+      } else {
+        Swal.fire("Cancelled", "Your parcel was not sent.", "error");
+      }
+    });
   };
 
   return (
@@ -56,7 +78,7 @@ const SendaPercel = () => {
       </h2>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Radio Section */}
+        {/* Parcel Type */}
         <div className="flex gap-4 mt-6">
           <label className="flex items-center gap-1">
             <input
@@ -67,7 +89,6 @@ const SendaPercel = () => {
             />
             Document
           </label>
-
           <label className="flex items-center gap-1">
             <input
               type="radio"
@@ -77,7 +98,6 @@ const SendaPercel = () => {
             />
             Non-Document
           </label>
-
           {errors.type && (
             <span className="text-red-500 text-sm">Required</span>
           )}
@@ -91,9 +111,9 @@ const SendaPercel = () => {
               type="text"
               className="input w-full outline-none border-gray-200"
               placeholder="Parcel Name"
-              {...register("percel-name", { required: true })}
+              {...register("parcelName", { required: true })}
             />
-            {errors["percel-name"] && (
+            {errors.parcelName && (
               <span className="text-red-500 text-sm">Required</span>
             )}
           </fieldset>
@@ -103,11 +123,11 @@ const SendaPercel = () => {
             <input
               type="number"
               placeholder="Weight (kg)"
-              disabled={type !== "non-document"} // 🔥 only active for non-document
-              {...register("weight")}
+              disabled={type !== "non-document"}
+              {...register("weight", { required: type === "non-document" })}
               className="input w-full outline-none border-gray-200"
             />
-            {errors["weight"] && (
+            {errors.weight && (
               <span className="text-red-500 text-sm">Required</span>
             )}
           </fieldset>
@@ -115,51 +135,47 @@ const SendaPercel = () => {
 
         <hr className="mt-6 text-gray-300" />
 
-        {/* Sender & Receiver Details */}
+        {/* Sender & Receiver */}
         <div className="sm:grid lg:grid-cols-2 pt-4 gap-6">
           {/* Sender */}
           <div>
             <h1 className="text-xl text-[#03373D] font-semibold sm:text-2xl">
               Sender Details
             </h1>
+
             <div className="sm:grid grid-cols-2 w-full mt-4 gap-4">
               <fieldset className="fieldset w-full">
                 <label className="label font-bold">Sender Name</label>
                 <input
                   type="text"
-                  className="input w-full outline-none border-gray-200"
                   placeholder="Sender Name"
-                  {...register("sender-name", { required: true })}
+                  className="input w-full outline-none border-gray-200"
+                  {...register("senderName", { required: true })}
                 />
-                {errors["sender-name"] && (
-                  <span className="text-red-500 text-sm">Required</span>
-                )}
               </fieldset>
+
               <fieldset className="fieldset w-full">
-                <label className="label font-bold">
-                  Sender Email
-                </label>
+                <label className="label font-bold">Sender Email</label>
                 <input
                   type="email"
-                  className="input w-full outline-none border-gray-200"
                   placeholder="Sender Email"
+                  className="input w-full outline-none border-gray-200"
                   {...register("senderEmail", { required: true })}
                 />
-                {errors["senderEmail"] && (
-                  <span className="text-red-500 text-sm">Required</span>
-                )}
               </fieldset>
             </div>
 
             <div className="sm:grid grid-cols-2 w-full mt-2 gap-4">
-              <fieldset className="fieldset w-full ">
-                <legend className="fieldset-legend">Sender Regions</legend>
+              <fieldset className="fieldset w-full">
+                <legend className="fieldset-legend">Sender Region</legend>
                 <select
                   {...register("senderRegion")}
-                  defaultValue="Pick a region"
-                  className="select  w-full outline-none border-gray-200"
+                  defaultValue=""
+                  className="select w-full outline-none border-gray-200"
                 >
-                  <option disabled={true}>Pick a region</option>
+                  <option value="" disabled>
+                    Pick a region
+                  </option>
                   {regions.map((r, i) => (
                     <option key={i} value={r}>
                       {r}
@@ -167,44 +183,37 @@ const SendaPercel = () => {
                   ))}
                 </select>
               </fieldset>
-              {/* sender districts */}
-              <fieldset className="fieldset">
-                <legend className="fieldset-legend">Sender Districts</legend>
+
+              <fieldset className="fieldset w-full">
+                <legend className="fieldset-legend">Sender District</legend>
                 <select
                   {...register("senderDistrict")}
-                  defaultValue="Pick a district"
-                  className="select  w-full outline-none border-gray-200"
+                  defaultValue=""
+                  className="select w-full outline-none border-gray-200"
                 >
-                  <option disabled={true}>Pick a district</option>
-                  {districtsByRegion(senderRegion).map((r, i) => (
-                    <option key={i} value={r}>
-                      {r}
+                  <option value="" disabled>
+                    Pick a district
+                  </option>
+                  {districtsByRegion(senderRegion).map((d, i) => (
+                    <option key={i} value={d}>
+                      {d}
                     </option>
                   ))}
                 </select>
               </fieldset>
             </div>
 
-            <fieldset className="fieldset  w-full">
+            <fieldset className="fieldset w-full mt-4">
               <label className="label font-bold">Sender Contact No</label>
               <input
                 type="text"
-                className="input w-full outline-none border-gray-200"
                 placeholder="Sender Contact Number"
+                className="input w-full outline-none border-gray-200"
                 {...register("contact-number", { required: true })}
               />
               {errors["contact-number"] && (
                 <span className="text-red-500 text-sm">Required</span>
               )}
-            </fieldset>
-
-            <fieldset className="fieldset w-full mt-4">
-              <label className="label font-bold">Pickup Instruction</label>
-              <textarea
-                className="textarea w-full outline-none border-gray-200"
-                placeholder="Pickup Instruction"
-                {...register("sender-instruction")}
-              ></textarea>
             </fieldset>
           </div>
 
@@ -219,39 +228,34 @@ const SendaPercel = () => {
                 <label className="label font-bold">Receiver Name</label>
                 <input
                   type="text"
-                  className="input w-full outline-none border-gray-200"
                   placeholder="Receiver Name"
-                  {...register("receiver-name", { required: true })}
+                  className="input w-full outline-none border-gray-200"
+                  {...register("receiverName", { required: true })}
                 />
-                {errors["receiver-name"] && (
-                  <span className="text-red-500 text-sm">Required</span>
-                )}
               </fieldset>
+
               <fieldset className="fieldset w-full">
-                <label className="label font-bold">
-                  Receiver Email
-                </label>
+                <label className="label font-bold">Receiver Email</label>
                 <input
                   type="email"
-                  className="input w-full outline-none border-gray-200"
                   placeholder="Receiver Email"
+                  className="input w-full outline-none border-gray-200"
                   {...register("receiverEmail", { required: true })}
                 />
-                {errors["receiverEmail"] && (
-                  <span className="text-red-500 text-sm">Required</span>
-                )}
               </fieldset>
             </div>
 
             <div className="sm:grid grid-cols-2 w-full mt-2 gap-4">
-              <fieldset className="fieldset  w-full">
-                <legend className="fieldset-legend">Receiver Regions</legend>
+              <fieldset className="fieldset w-full">
+                <legend className="fieldset-legend">Receiver Region</legend>
                 <select
                   {...register("receiverRegion")}
-                  defaultValue="Pick a region"
-                  className="select  w-full outline-none border-gray-200"
+                  defaultValue=""
+                  className="select w-full outline-none border-gray-200"
                 >
-                  <option disabled={true}>Pick a region</option>
+                  <option value="" disabled>
+                    Pick a region
+                  </option>
                   {regions.map((r, i) => (
                     <option key={i} value={r}>
                       {r}
@@ -259,15 +263,17 @@ const SendaPercel = () => {
                   ))}
                 </select>
               </fieldset>
-              {/* receiver district */}
-              <fieldset className="fieldset">
+
+              <fieldset className="fieldset w-full">
                 <legend className="fieldset-legend">Receiver District</legend>
                 <select
                   {...register("receiverDistrict")}
-                  defaultValue="Pick a district"
+                  defaultValue=""
                   className="select w-full outline-none border-gray-200"
                 >
-                  <option disabled={true}>Pick a district</option>
+                  <option value="" disabled>
+                    Pick a district
+                  </option>
                   {districtsByRegion(receiverRegion).map((d, i) => (
                     <option key={i} value={d}>
                       {d}
@@ -277,26 +283,17 @@ const SendaPercel = () => {
               </fieldset>
             </div>
 
-            <fieldset className="fieldset w-full">
+            <fieldset className="fieldset w-full mt-4">
               <label className="label font-bold">Receiver Contact No</label>
               <input
                 type="text"
-                className="input w-full outline-none border-gray-200"
                 placeholder="Receiver Contact Number"
+                className="input w-full outline-none border-gray-200"
                 {...register("receiver-number", { required: true })}
               />
               {errors["receiver-number"] && (
                 <span className="text-red-500 text-sm">Required</span>
               )}
-            </fieldset>
-
-            <fieldset className="fieldset w-full mt-4">
-              <label className="label font-bold">Delivery Instruction</label>
-              <textarea
-                className="textarea w-full outline-none border-gray-200"
-                placeholder="Delivery Instruction"
-                {...register("receiver-instruction")}
-              ></textarea>
             </fieldset>
           </div>
         </div>
