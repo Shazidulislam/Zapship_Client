@@ -2,9 +2,12 @@ import React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useLoaderData } from "react-router";
 import Swal from "sweetalert2";
+import useAuth from "../../hooks/useAuth";
 
 const SendaPercel = () => {
   const servicesCenter = useLoaderData();
+  const { user } = useAuth(); // get logged-in user
+
 
   const {
     register,
@@ -28,44 +31,151 @@ const SendaPercel = () => {
       .map((c) => c.district);
   };
 
-  const onSubmit = (data) => {
-    const isDocument = data.type === "document";
-    const weight = parseFloat(data.weight) || 0;
-    const isWithinCity = data.senderDistrict === data.receiverDistrict;
+const onSubmit = (data) => {
 
-    let price = 0;
+  const isDocument = data.type === "document";
+  const weight = parseFloat(data.weight) || 0;
+  const isWithinCity = data.senderDistrict === data.receiverDistrict;
 
-    if (isDocument) {
-      price = isWithinCity ? 60 : 80;
+  let price = 0;
+  let breakdown = "";
+
+  // ---------------------------------
+  // 🔥 PRICE CALCULATION + BREAKDOWN
+  // ---------------------------------
+
+  if (isDocument) {
+    price = isWithinCity ? 60 : 80;
+
+    breakdown = `
+      <div style="text-align:left; line-height:1.6;">
+        <p><b>Parcel Type:</b> Document (Paper/Letter Items)</p>
+        <p><b>Delivery Zone:</b> ${
+          isWithinCity ? "Same District (Inside City)" : "Different District (Outside City)"
+        }</p>
+        <p><b>Charge Applied:</b> ৳${price} — ${
+          isWithinCity
+            ? "Standard inside-city document fee"
+            : "Standard outside-city document fee"
+        }</p>
+      </div>
+    `;
+  } else {
+    if (weight <= 3) {
+      price = isWithinCity ? 110 : 150;
+
+      breakdown = `
+        <div style="text-align:left; line-height:1.6;">
+          <p><b>Parcel Type:</b> Regular Item / Non-Document</p>
+          <p><b>Total Weight:</b> ${weight} kg</p>
+          <p><b>Delivery Zone:</b> ${
+            isWithinCity ? "Same District (Inside City)" : "Different District (Outside City)"
+          }</p>
+          <p><b>Base Charge (up to 3kg):</b> ৳${price}</p>
+        </div>
+      `;
     } else {
-      // Non-Document pricing
-      if (weight <= 3) {
-        price = isWithinCity ? 110 : 150;
-      } else {
-        const extraWeight = weight - 3;
-        const extraCost = extraWeight * 40;
-        price = isWithinCity ? 110 + extraCost : 150 + extraCost + 40;
-      }
-    }
+      const extraWeight = weight - 3;
+      const extraCost = extraWeight * 40;
 
-    Swal.fire({
-      title: "Confirm Parcel Booking",
-      html: `<p>Total Price: ৳${price}</p>`,
-      icon: "info",
-      showCancelButton: true,
-      confirmButtonText: "Yes, Send",
-      cancelButtonText: "Cancel",
-      reverseButtons: true,
-      position: "center",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        console.log({ ...data, price });
-        Swal.fire("Sent!", "Your parcel has been booked.", "success");
-      } else {
-        Swal.fire("Cancelled", "Your parcel was not sent.", "error");
-      }
-    });
-  };
+      price = isWithinCity
+        ? 110 + extraCost
+        : 150 + extraCost + 40;
+
+      breakdown = `
+        <div style="text-align:left; line-height:1.6;">
+          <p><b>Parcel Type:</b> Regular Item / Non-Document</p>
+          <p><b>Total Weight:</b> ${weight} kg</p>
+          <p><b>Delivery Zone:</b> ${
+            isWithinCity ? "Same District (Inside City)" : "Different District (Outside City)"
+          }</p>
+          <p><b>Base Charge (first 3kg):</b> ৳${isWithinCity ? 110 : 150}</p>
+          <p><b>Extra Weight Charge:</b> ${extraWeight} kg × 40 = ৳${extraCost}</p>
+          ${
+            !isWithinCity
+              ? `<p><b>Additional Out-of-City Fee:</b> ৳40 — applied for inter-district service</p>`
+              : ""
+          }
+        </div>
+      `;
+    }
+  }
+
+  // ---------------------------------
+  // ⭐ GET CURRENT DATE & TIME
+  // ---------------------------------
+  const now = new Date();
+  const formattedTime = now.toLocaleString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  });
+
+  // ---------------------------------
+  // 🔥 SWEET ALERT FOR SUMMARY
+  // ---------------------------------
+
+  Swal.fire({
+    title: "Parcel Price Breakdown",
+    html: `
+      ${breakdown}
+
+      <hr />
+
+      <h3 style="margin-top: 10px; font-size:16px; opacity:0.8;">
+        <b>Time:</b> ${formattedTime}
+      </h3>
+
+      <h2 style="margin-top:15px; font-size:22px;">
+        <span style="
+          padding:10px 16px;
+          border-radius:10px;
+          color:#000;
+          display:inline-block;
+          font-weight:bold;
+        ">
+          Total Payable: ৳${price}
+        </span>
+      </h2>
+    `,
+    icon: "info",
+    showCancelButton: true,
+    confirmButtonText: "Proceed to Payment 💸",
+    cancelButtonText: "Back to Edit 🔙",
+    reverseButtons: true,
+    position: "center",
+  }).then((result) => {
+    if (result.isConfirmed) {
+
+      const parcelInfo = {
+        ...data,
+        price,
+        createdByEmail: user?.email || "",
+        creatorName: user?.displayName || "",
+        receiverEmail: data.receiverEmail || "",
+        trackingId: "TRK-" + Math.floor(100000 + Math.random() * 900000),
+        createdAt: now.toISOString(),
+        createdAtUnix: Date.now(),
+        status: "pending",
+        paymentStatus: "unpaid",
+      };
+
+      console.log("Proceeding to payment with:", parcelInfo);
+
+      Swal.fire("Redirecting...", "Taking you to payment page!", "success");
+    } else {
+      Swal.fire("Edit Your Parcel", "You can update your information now.", "info");
+    }
+  });
+};
+
+
+
+
+
 
   return (
     <div className="p-10 mt-4 mb-10 rounded-lg bg-white shadow">
@@ -215,6 +325,18 @@ const SendaPercel = () => {
                 <span className="text-red-500 text-sm">Required</span>
               )}
             </fieldset>
+
+            {/* Pickup Instruction */}
+            <fieldset className="fieldset w-full mt-4">
+              <label className="label font-bold">Pickup Instruction</label>
+              <textarea
+                placeholder="Pickup Instruction"
+                {...register("senderInstruction")}
+                className=" w-full outline-none border p-4 border-gray-200"
+                rows={3}
+                cols={5}
+              ></textarea>
+            </fieldset>
           </div>
 
           {/* Receiver */}
@@ -294,6 +416,17 @@ const SendaPercel = () => {
               {errors["receiver-number"] && (
                 <span className="text-red-500 text-sm">Required</span>
               )}
+            </fieldset>
+            {/* Delivery  Instruction */}
+            <fieldset className="fieldset w-full mt-4">
+              <label className="label font-bold">Delivery Instruction</label>
+              <textarea
+                placeholder="Delivery Instruction"
+                {...register("deliveryInstruction")}
+                className=" w-full outline-none border p-4 border-gray-200"
+                rows={3}
+                cols={5}
+              ></textarea>
             </fieldset>
           </div>
         </div>
