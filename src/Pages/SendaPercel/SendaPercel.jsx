@@ -1,14 +1,16 @@
 import React from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import Swal from "sweetalert2";
 import useAuth from "../../hooks/useAuth";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 
 const SendaPercel = () => {
   const servicesCenter = useLoaderData();
   const { user } = useAuth(); // get logged-in user
 
-
+  const { axiosSecure } = useAxiosSecure();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -31,63 +33,76 @@ const SendaPercel = () => {
       .map((c) => c.district);
   };
 
-const onSubmit = (data) => {
+  const generateTrackingId = () => {
+    const date = new Date();
 
-  const isDocument = data.type === "document";
-  const weight = parseFloat(data.weight) || 0;
-  const isWithinCity = data.senderDistrict === data.receiverDistrict;
+    const datePart = date.toISOString().split("T")[0].replace(/-/g, "");
 
-  let price = 0;
-  let breakdown = "";
+    const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
 
-  // ---------------------------------
-  // 🔥 PRICE CALCULATION + BREAKDOWN
-  // ---------------------------------
+    return `PCL-${datePart}-${rand}`;
+  };
 
-  if (isDocument) {
-    price = isWithinCity ? 60 : 80;
+  const onSubmit = async (data) => {
+    const isDocument = data.type === "document";
+    const weight = parseFloat(data.weight) || 0;
+    const isWithinCity = data.senderDistrict === data.receiverDistrict;
 
-    breakdown = `
-      <div style="text-align:left; line-height:1.6;">
-        <p><b>Parcel Type:</b> Document (Paper/Letter Items)</p>
-        <p><b>Delivery Zone:</b> ${
-          isWithinCity ? "Same District (Inside City)" : "Different District (Outside City)"
-        }</p>
-        <p><b>Charge Applied:</b> ৳${price} — ${
-          isWithinCity
-            ? "Standard inside-city document fee"
-            : "Standard outside-city document fee"
-        }</p>
-      </div>
-    `;
-  } else {
-    if (weight <= 3) {
-      price = isWithinCity ? 110 : 150;
+    let price = 0;
+    let breakdown = "";
+
+    // ---------------------------------
+    // 🔥 PRICE CALCULATION + BREAKDOWN
+    // ---------------------------------
+
+    if (isDocument) {
+      price = isWithinCity ? 60 : 80;
 
       breakdown = `
-        <div style="text-align:left; line-height:1.6;">
+      <div style="text-align:left; line-height:2.9;">
+        <p><b>Parcel Type:</b> Document (Paper/Letter Items)</p>
+        <p><b>Delivery Zone:</b> ${
+          isWithinCity
+            ? "Same District (Inside City)"
+            : "Different District (Outside City)"
+        }</p>
+        <p><b>Charge Applied:</b> ৳${price} — ${
+        isWithinCity
+          ? "Standard inside-city document fee"
+          : "Standard outside-city document fee"
+      }</p>
+      </div>
+    `;
+    } else {
+      if (weight <= 3) {
+        price = isWithinCity ? 110 : 150;
+
+        breakdown = `
+        <div style="text-align:left; line-height:2.6;">
           <p><b>Parcel Type:</b> Regular Item / Non-Document</p>
           <p><b>Total Weight:</b> ${weight} kg</p>
           <p><b>Delivery Zone:</b> ${
-            isWithinCity ? "Same District (Inside City)" : "Different District (Outside City)"
+            isWithinCity
+              ? "Same District (Inside City)"
+              : "Different District (Outside City)"
           }</p>
           <p><b>Base Charge (up to 3kg):</b> ৳${price}</p>
         </div>
       `;
-    } else {
-      const extraWeight = weight - 3;
-      const extraCost = extraWeight * 40;
+      } else {
+        const extraWeight = weight - 3;
+        const extraCost = extraWeight * 40;
 
-      price = isWithinCity
-        ? 110 + extraCost
-        : 150 + extraCost + 40;
+        price = isWithinCity ? 110 + extraCost : 150 + extraCost + 40;
 
-      breakdown = `
-        <div style="text-align:left; line-height:1.6;">
+        breakdown = `
+        <div style="text-align:left; line-height:2.6;">
           <p><b>Parcel Type:</b> Regular Item / Non-Document</p>
           <p><b>Total Weight:</b> ${weight} kg</p>
           <p><b>Delivery Zone:</b> ${
-            isWithinCity ? "Same District (Inside City)" : "Different District (Outside City)"
+            isWithinCity
+              ? "Same District (Inside City)"
+              : "Different District (Outside City)"
           }</p>
           <p><b>Base Charge (first 3kg):</b> ৳${isWithinCity ? 110 : 150}</p>
           <p><b>Extra Weight Charge:</b> ${extraWeight} kg × 40 = ৳${extraCost}</p>
@@ -98,29 +113,31 @@ const onSubmit = (data) => {
           }
         </div>
       `;
+      }
     }
-  }
 
-  // ---------------------------------
-  // ⭐ GET CURRENT DATE & TIME
-  // ---------------------------------
-  const now = new Date();
-  const formattedTime = now.toLocaleString("en-US", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true,
-  });
+    // ---------------------------------
+    // ⭐ GET CURRENT DATE & TIME
+    // ---------------------------------
+    const now = new Date();
+    const formattedTime = now.toLocaleString("en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
 
-  // ---------------------------------
-  // 🔥 SWEET ALERT FOR SUMMARY
-  // ---------------------------------
+    // ---------------------------------
+    // 🔥 SWEET ALERT FOR SUMMARY
+    // ---------------------------------
 
-  Swal.fire({
-    title: "Parcel Price Breakdown",
-    html: `
+    //save to the server
+
+    Swal.fire({
+      title: "Parcel Price Breakdown",
+      html: `
       ${breakdown}
 
       <hr />
@@ -141,42 +158,54 @@ const onSubmit = (data) => {
         </span>
       </h2>
     `,
-    icon: "info",
-    showCancelButton: true,
-    confirmButtonText: "Proceed to Payment 💸",
-    cancelButtonText: "Back to Edit 🔙",
-    reverseButtons: true,
-    position: "center",
-  }).then((result) => {
-    if (result.isConfirmed) {
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonText: "Proceed to Payment 💸",
+      cancelButtonText: "Back to Edit 🔙",
+      reverseButtons: true,
+      position: "center",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const parcelInfo = {
+          ...data,
+          price,
+          createdByEmail: user?.email || "",
+          creatorName: user?.displayName || "",
+          receiverEmail: data.receiverEmail || "",
+          // trackingId: "TRK-" + Math.floor(100000 + Math.random() * 900000),
+          createdAt: new Date().toISOString(),
+          createdAtUnix: Date.now(),
+          status: "pending",
+          paymentStatus: "unpaid",
+          generateTrackingId: generateTrackingId(),
+        };
 
-      const parcelInfo = {
-        ...data,
-        price,
-        createdByEmail: user?.email || "",
-        creatorName: user?.displayName || "",
-        receiverEmail: data.receiverEmail || "",
-        trackingId: "TRK-" + Math.floor(100000 + Math.random() * 900000),
-        createdAt: now.toISOString(),
-        createdAtUnix: Date.now(),
-        status: "pending",
-        paymentStatus: "unpaid",
-      };
+        axiosSecure.post("/parcels", parcelInfo).then((res) => {
+          console.log("after saving data", res.data);
+          if (res.data.insertedId) {
+            navigate("/dashboard/myParcel");
+            //!!! TODO add payment method
+            Swal.fire({
+              position: "top-end",
+              icon: "success",
+              title: "Parcel has created. Please Pay",
+              showConfirmButton: false,
+              timer: 2500,
+            });
+          }
+        });
 
-      console.log("Proceeding to payment with:", parcelInfo);
+        console.log("Proceeding to payment with:", parcelInfo);
 
-      Swal.fire("Redirecting...", "Taking you to payment page!", "success");
-    } else {
-      Swal.fire("Edit Your Parcel", "You can update your information now.", "info");
-    }
-  });
-};
-
-
-
-
-
-
+      } else {
+        Swal.fire(
+          "Edit Your Parcel",
+          "You can update your information now.",
+          "info"
+        );
+      }
+    });
+  };
   return (
     <div className="p-10 mt-4 mb-10 rounded-lg bg-white shadow">
       <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#03373D]">
