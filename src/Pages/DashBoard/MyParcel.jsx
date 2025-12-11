@@ -3,10 +3,12 @@ import React from "react";
 import useAuth from "../../hooks/useAuth";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router";
 
 const MyParcel = () => {
   const { user } = useAuth();
   const { axiosSecure } = useAxiosSecure();
+  const navigate = useNavigate()
   const { data: parcels  , refetch} = useQuery({
     queryKey: ["my-parcels", user.email],
     queryFn: async () => {
@@ -21,8 +23,9 @@ const MyParcel = () => {
     alert("Viewing: " + parcel.parcelName);
   };
 
-  const handlePay = (parcel) => {
-    alert("Paying for: " + parcel.parcelName);
+  const handlePay = (id) => {
+    console.log(id)
+    navigate(`/dashboard/payment/${id}`)
   };
 
   const handleDelete = (id) => {
@@ -128,7 +131,7 @@ const MyParcel = () => {
                   {parcel.paymentStatus === "unpaid" && (
                     <button
                       className="btn btn-sm btn-warning"
-                      onClick={() => handlePay(parcel)}
+                      onClick={() => handlePay(parcel?._id)}
                     >
                       Pay
                     </button>

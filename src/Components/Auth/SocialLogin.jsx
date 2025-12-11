@@ -1,15 +1,18 @@
 import { FcGoogle } from "react-icons/fc";
 import useAuth from "../../hooks/useAuth";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 const SocialLogin = ({method }) => {
     const {signInWithGoogle} = useAuth()
     const navigate = useNavigate()
+    const location = useLocation()
+    const form = location?.state?.from || "/"
+
     const handleGoogleSignIn =async()=>{
        const result = await signInWithGoogle()
        if(result.user){
         alert("Succssfull login")
-        navigate("/")
+        navigate(form)
        }
     }
     return (

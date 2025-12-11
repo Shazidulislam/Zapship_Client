@@ -11,6 +11,7 @@ import BeRider from "../Pages/BeRider/BeRider";
 import PricingCalculation from "../Pages/PricingCalulation/PricingCalculation";
 import DashBoard from "../Layout/DashBoard";
 import MyParcel from "../Pages/DashBoard/MyParcel";
+import Payment from "../Pages/DashBoard/Payment/Payment";
 
 const router = createBrowserRouter([
   {
@@ -78,6 +79,10 @@ const router = createBrowserRouter([
         {
             path:"/dashboard/myParcel",
             Component:MyParcel
+        },
+        {
+          path:"payment/:parcelID",
+          Component:Payment
         }
     ]
   },

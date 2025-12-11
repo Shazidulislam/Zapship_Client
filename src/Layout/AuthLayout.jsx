@@ -5,8 +5,8 @@ import authImg from "../assets/potho/authImage.png";
 const AuthLayout = () => {
   return (
     <div>
-      <div className=" p-20 bg-base-200 min-h-screen">
-        <Link to={"/"}>
+      <div className="  sm:p-20 bg-base-200 min-h-screen">
+        <Link to={"/"} className="pl-3 mt-3">
           <ProFastButton />
         </Link>
         <div className="hero-content flex-col lg:flex-row">
