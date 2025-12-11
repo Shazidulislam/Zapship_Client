@@ -46,13 +46,18 @@ const Sidebar = () => {
               <ProFastButton />
             </Link>
           </div>
-        </div>
-        {/* nav Items */}
-        <div className="">
-          <nav>
-             <Link   to={"/dashboard/myParcel"}>My Parcel</Link>  
+          <div className=" pt-2">
+          <nav className="flex flex-col gap-2 ">
+             <Link  className="pl-4 py-3 bg-white"  to={"/dashboard/myParcel"}>My Parcel</Link>  
+             <Link  className="pl-4 py-3 bg-white"  to={"/dashboard/myParcel"}>My Parcel</Link>  
+             <Link  className="pl-4 py-3 bg-white"  to={"/dashboard/myParcel"}>My Parcel</Link>  
+             <Link  className="pl-4 py-3 bg-white"  to={"/dashboard/myParcel"}>My Parcel</Link>  
+             <Link  className="pl-4 py-3 bg-white"  to={"/dashboard/myParcel"}>My Parcel</Link>  
           </nav>
         </div>
+        </div>
+        {/* nav Items */}
+        
         {/* nav Items end here */}
         <hr />
           <button
